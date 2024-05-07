@@ -2,6 +2,22 @@
 
 This project has the objective ....
 
+
+
+## Table of Contents
+- [Questions we want to answer](#questions-we-want-to-answer)
+  - [1. What were our total revenues in 1997?](#1-what-were-our-total-revenues-in-1997)
+  - [2. Perform a monthly growth analysis and calculate YTD.](#2-perform-a-monthly-growth-analysis-and-calculate-ytd)
+  - [3. What is the total amount each customer has paid so far?](#3-what-is-the-total-amount-each-customer-has-paid-so-far)
+  - [4. Separate the customers into 5 groups according to the payment value per customer.](#4-separate-the-customers-into-5-groups-according-to-the-payment-value-per-customer)
+  - [5. Now only the customers who are in groups 3, 4, and 5 will be selected for a special marketing analysis with them.](#5-now-only-the-customers-who-are-in-groups-3-4-and-5-will-be-selected-for-a-special-marketing-analysis-with-them)
+  - [6. Identify the top 10 best-selling products.](#6-identify-the-top-10-best-selling-products)
+  - [7. Filter for only UK customers who paid more than 1000 dollars.](#7-filter-for-only-uk-customers-who-paid-more-than-1000-dollars)
+- [Context](#context)
+- [How to run this project](#how-to-run-this-project)
+
+-------------------------------
+
 ## Questions we want to answer
 
 #### 1. What were our total revenues in 1997?
@@ -49,9 +65,9 @@ ORDER BY total_revenue DESC;
 
 ```sql
 SELECT
-	c.company_name,
-	SUM((od.unit_price * od.quantity) * (1 - od.discount)) AS total_revenue,
-	NTILE(5) OVER (ORDER BY SUM((od.unit_price * od.quantity) * (1 - od.discount)) DESC) AS revenue_group
+    c.company_name,
+    SUM((od.unit_price * od.quantity) * (1 - od.discount)) AS total_revenue,
+    NTILE(5) OVER (ORDER BY SUM((od.unit_price * od.quantity) * (1 - od.discount)) DESC) AS revenue_group
 FROM order_details AS od
 LEFT JOIN orders AS o ON od.order_id = o.order_id
 LEFT JOIN customers AS c ON c.customer_id = o.customer_id
@@ -72,9 +88,9 @@ ORDER BY total_revenue DESC;
 ```sql
 WITH companies_revenue_groups AS (
 	SELECT
-		c.company_name,
-		SUM((od.unit_price * od.quantity) * (1 - od.discount)) AS total_revenue,
-		NTILE(5) OVER (ORDER BY SUM((od.unit_price * od.quantity) * (1 - od.discount)) DESC) AS revenue_group
+            c.company_name,
+            SUM((od.unit_price * od.quantity) * (1 - od.discount)) AS total_revenue,
+            NTILE(5) OVER (ORDER BY SUM((od.unit_price * od.quantity) * (1 - od.discount)) DESC) AS revenue_group
 	FROM order_details AS od
 	LEFT JOIN orders AS o ON od.order_id = o.order_id
 	LEFT JOIN customers AS c ON c.customer_id = o.customer_id
@@ -83,7 +99,7 @@ WITH companies_revenue_groups AS (
 )
 
 SELECT 
-	* 
+    *   
 FROM companies_revenue_groups
 WHERE revenue_group IN (3,4,5);
 ```
@@ -100,8 +116,8 @@ WHERE revenue_group IN (3,4,5);
 
 ```sql
 SELECT 
-	products.product_name, 
-	SUM(order_details.unit_price * order_details.quantity * (1.0 - order_details.discount)) AS sales
+    products.product_name, 
+    SUM(order_details.unit_price * order_details.quantity * (1.0 - order_details.discount)) AS sales
 FROM products
 INNER JOIN order_details ON order_details.product_id = products.product_id
 GROUP BY products.product_name
@@ -121,7 +137,7 @@ ORDER BY sales DESC;
 | Carnarvon Tigers                 | 29171.874963399023 |
 | Rössle Sauerkraut                | 25696.63978933155  |
 
-#### 7. UK Customers Who Paid More Than $1000
+#### 7. Filter for only UK customers who paid more than 1000 dollars.
 
 ```sql
 
