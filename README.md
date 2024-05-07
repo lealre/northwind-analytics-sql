@@ -1,8 +1,10 @@
 # Analytic Report with SQL - Northwind database
 
-This project has the objective ....
+This project aims to generate an analytical business report from a sales database. 
 
+The Northwind database contains sales data from a company called Northwind Traders, which imports and exports specialty foods from around the world. In this report, we will primarily focus on extracting insights from revenue, product, and customer data using SQL operations in a PostgreSQL database.
 
+The analyses provided here can benefit companies of all sizes looking to enhance their analytical capabilities. Through these reports, organizations can strategically position themselves in the market, leveraging data-driven decisions to improve their future results.
 
 ## Table of Contents
 - [Questions we want to answer](#questions-we-want-to-answer)
@@ -37,8 +39,70 @@ WHERE EXTRACT(YEAR FROM o.order_date) = 1997;
 #### 2. Perform a monthly growth analysis and calculate YTD.
 
 ```sql
-
+WITH monthly_revenue_table AS (
+    SELECT
+        EXTRACT(YEAR FROM o.order_date) AS year,
+        EXTRACT(MONTH FROM o.order_date) AS month,
+        SUM(od.unit_price * od.quantity * (1.0 - od.discount)) AS monthly_revenue
+    FROM order_details AS od
+    LEFT JOIN orders AS o ON od.order_id = o.order_id
+    GROUP BY
+        EXTRACT(YEAR FROM o.order_date),
+        EXTRACT(MONTH FROM o.order_date)
+),
+cumulative_revenue_table AS (
+    SELECT
+        year,
+        month,
+        monthly_revenue,
+        SUM(monthly_revenue) OVER (PARTITION BY year ORDER BY month) AS ytd_revenue
+    FROM monthly_revenue_table
+)
+SELECT
+    year,
+    month,
+    monthly_revenue,
+    monthly_revenue - LAG(monthly_revenue) OVER (PARTITION BY year ORDER BY month) AS monthly_difference,
+    ytd_revenue,
+    (monthly_revenue - LAG(monthly_revenue) OVER (PARTITION BY year ORDER BY month)) / LAG(monthly_revenue) OVER (PARTITION BY year ORDER BY month) * 100 AS percentage_monthly_difference
+FROM cumulative_revenue_table
+ORDER BY year, month;
 ```
+
+| Year | Month | Cumulative Revenue | Monthly Revenue Change | Cumulative Revenue Change (%) | Monthly Revenue Change (%) |
+|------|-------|--------------------|------------------------|-------------------------------|----------------------------|
+| 1996 | 7     | 27861.89512966156 |                        |                               |                            |
+| 1996 | 8     | 25485.275070743264 | -2376.6200589182954 | 53347.17020040483 | -8.530001451294545 |
+| 1996 | 9     | 26381.400132587554 | 896.12506184429 | 79728.57033299239 | 3.51624637896504 |
+| 1996 | 10    | 37515.72494547888 | 11134.32481289133 | 117244.29527847127 | 42.20520805162909 |
+| ...| ...| ... |...|...|...|
+| 1998 | 3     | 104854.15500015698 | 5438.86761714879 | 298491.552590101 | 5.47085640480519 |
+| 1998 | 4     | 123798.6822555472 | 18944.527255390218 | 422290.2348456482 | 18.06750267107856 |
+| 1998 | 5     | 18333.630432192596 | -105465.0518233546 | 440623.8652778408 | -85.1907709370056 |
+
+YTD Analysis
+```sql
+
+WITH monthly_revenue_table AS (
+    SELECT
+        EXTRACT(YEAR FROM o.order_date) AS year,
+        EXTRACT(MONTH FROM o.order_date) AS month,
+        SUM(od.unit_price * od.quantity * (1.0 - od.discount)) AS monthly_revenue
+    FROM order_details AS od
+    LEFT JOIN orders AS o ON od.order_id = o.order_id
+    GROUP BY
+        EXTRACT(YEAR FROM o.order_date),
+        EXTRACT(MONTH FROM o.order_date)
+)
+SELECT
+    year,
+    month,
+    monthly_revenue,
+    SUM(monthly_revenue) OVER (PARTITION BY year ORDER BY month) AS ytd_revenue
+FROM monthly_revenue_table
+```
+
+
 
 #### 3. What is the total amount each customer has paid so far?
 
