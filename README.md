@@ -8,13 +8,15 @@ The analyses provided here can benefit companies of all sizes looking to enhance
 
 ## Table of Contents
 - [Questions we want to answer](#questions-we-want-to-answer)
-  - [1. What were our total revenues in 1997?](#1-what-were-our-total-revenues-in-1997)
-  - [2. Perform a monthly growth analysis and calculate YTD.](#2-perform-a-monthly-growth-analysis-and-calculate-ytd)
-  - [3. What is the total amount each customer has paid so far?](#3-what-is-the-total-amount-each-customer-has-paid-so-far)
-  - [4. Separate the customers into 5 groups according to the payment value per customer.](#4-separate-the-customers-into-5-groups-according-to-the-payment-value-per-customer)
-  - [5. Now only the customers who are in groups 3, 4, and 5 will be selected for a special marketing analysis with them.](#5-now-only-the-customers-who-are-in-groups-3-4-and-5-will-be-selected-for-a-special-marketing-analysis-with-them)
-  - [6. Identify the top 10 best-selling products.](#6-identify-the-top-10-best-selling-products)
-  - [7. Filter for only UK customers who paid more than 1000 dollars.](#7-filter-for-only-uk-customers-who-paid-more-than-1000-dollars)
+    - [Operational Revenue](#operational-revenue)
+        - [How can we observe the operational revenue over the years?](#how-can-we-observe-the-operational-revenue-over-the-years)
+        - [How can we observe the trends of the operational revenue within each year?](#how-can-we-observe-the-trends-of-the-operational-revenue-within-each-year)
+    - [Customers Analysis](#customers-analysis)
+        - [From which customers do we have the main operational revenue?](#from-which-customers-do-we-have-the-main-operational-revenue)
+        - [How can we classify customers to give specific approaches based on their level of demand?](#how-can-we-classify-customers-to-give-specific-approaches-based-on-their-level-of-demand)
+    - [Products Analysis](#products-analysis)
+        - [Which products have the highest demand and revenue?](#which-products-have-the-highest-demand-and-revenue)
+
 - [Context](#context)
 - [How to run this project](#how-to-run-this-project)
 
@@ -22,30 +24,49 @@ The analyses provided here can benefit companies of all sizes looking to enhance
 
 ## Questions we want to answer
 
-#### 1. What were our total revenues in 1997?
+### Operational Revenue
 
+#### How can we observe the operational revenue over the years?
 ```sql
+WITH annual_revenues AS (
+    SELECT 
+        EXTRACT(YEAR FROM o.order_date) AS year,
+        ROUND(SUM((od.unit_price * od.quantity) * (1 - od.discount))::numeric, 2) as revenue
+    FROM 
+        order_details AS od
+    LEFT JOIN 
+        orders AS o 
+        ON od.order_id = o.order_id
+    GROUP BY 
+        EXTRACT(YEAR FROM o.order_date)
+)
 SELECT 
-    SUM((od.unit_price * od.quantity) * (1 - od.discount)) as total_price
-FROM order_details AS od
-LEFT JOIN orders AS o ON od.order_id = o.order_id
-WHERE EXTRACT(YEAR FROM o.order_date) = 1997;
+    year,
+    revenue,
+    SUM(revenue) OVER (ORDER BY year) AS cumulative_revenue
+FROM annual_revenues;
+
 ```
 
-| Total Revenues in 1997 |
-|------------------------|
-|   617,085.2023927002  |
+| Year | Total Revenue | Cumulative Total Revenue |
+|------|---------------|--------------------------|
+| 1996 | 208083.97     | 208083.97                |
+| 1997 | 617085.20     | 825169.17                |
+| 1998 | 440623.87     | 1265793.04               |
 
-#### 2. Perform a monthly growth analysis and calculate YTD.
+#### How can we observe the trends of the operational revenue within each year?
 
 ```sql
 WITH monthly_revenue_table AS (
     SELECT
         EXTRACT(YEAR FROM o.order_date) AS year,
         EXTRACT(MONTH FROM o.order_date) AS month,
-        SUM(od.unit_price * od.quantity * (1.0 - od.discount)) AS monthly_revenue
-    FROM order_details AS od
-    LEFT JOIN orders AS o ON od.order_id = o.order_id
+        ROUND(SUM(od.unit_price * od.quantity * (1.0 - od.discount))::numeric,2) AS monthly_revenue
+    FROM 
+        order_details AS od
+    LEFT JOIN 
+        orders AS o 
+        ON od.order_id = o.order_id
     GROUP BY
         EXTRACT(YEAR FROM o.order_date),
         EXTRACT(MONTH FROM o.order_date)
@@ -56,127 +77,148 @@ cumulative_revenue_table AS (
         month,
         monthly_revenue,
         SUM(monthly_revenue) OVER (PARTITION BY year ORDER BY month) AS ytd_revenue
-    FROM monthly_revenue_table
+    FROM 
+        monthly_revenue_table
 )
 SELECT
     year,
     month,
     monthly_revenue,
+	ytd_revenue,
     monthly_revenue - LAG(monthly_revenue) OVER (PARTITION BY year ORDER BY month) AS monthly_difference,
-    ytd_revenue,
-    (monthly_revenue - LAG(monthly_revenue) OVER (PARTITION BY year ORDER BY month)) / LAG(monthly_revenue) OVER (PARTITION BY year ORDER BY month) * 100 AS percentage_monthly_difference
-FROM cumulative_revenue_table
-ORDER BY year, month;
+    ROUND((monthly_revenue - LAG(monthly_revenue) OVER (PARTITION BY year ORDER BY month)) / LAG(monthly_revenue) OVER (PARTITION BY year ORDER BY month) * 100::numeric,2) AS percentage_monthly_difference
+FROM 
+    cumulative_revenue_table
+ORDER BY 
+    year, month;
 ```
 
-| Year | Month | Cumulative Revenue | Monthly Revenue Change | Cumulative Revenue Change (%) | Monthly Revenue Change (%) |
-|------|-------|--------------------|------------------------|-------------------------------|----------------------------|
-| 1996 | 7     | 27861.89512966156 |                        |                               |                            |
-| 1996 | 8     | 25485.275070743264 | -2376.6200589182954 | 53347.17020040483 | -8.530001451294545 |
-| 1996 | 9     | 26381.400132587554 | 896.12506184429 | 79728.57033299239 | 3.51624637896504 |
-| 1996 | 10    | 37515.72494547888 | 11134.32481289133 | 117244.29527847127 | 42.20520805162909 |
-| ...| ...| ... |...|...|...|
-| 1998 | 3     | 104854.15500015698 | 5438.86761714879 | 298491.552590101 | 5.47085640480519 |
-| 1998 | 4     | 123798.6822555472 | 18944.527255390218 | 422290.2348456482 | 18.06750267107856 |
-| 1998 | 5     | 18333.630432192596 | -105465.0518233546 | 440623.8652778408 | -85.1907709370056 |
-
-YTD Analysis
-```sql
-
-WITH monthly_revenue_table AS (
-    SELECT
-        EXTRACT(YEAR FROM o.order_date) AS year,
-        EXTRACT(MONTH FROM o.order_date) AS month,
-        SUM(od.unit_price * od.quantity * (1.0 - od.discount)) AS monthly_revenue
-    FROM order_details AS od
-    LEFT JOIN orders AS o ON od.order_id = o.order_id
-    GROUP BY
-        EXTRACT(YEAR FROM o.order_date),
-        EXTRACT(MONTH FROM o.order_date)
-)
-SELECT
-    year,
-    month,
-    monthly_revenue,
-    SUM(monthly_revenue) OVER (PARTITION BY year ORDER BY month) AS ytd_revenue
-FROM monthly_revenue_table
-```
+| Year | Month | Revenue | Cumulative Revenue | Monthly Change | Monthly Change (%) |
+|------|-------|---------|--------------------|----------------|--------------------|
+| 1996 | 7     | 27861.90 | 27861.90           |                |                    |
+| 1996 | 8     | 25485.28 | 53347.18           | -2376.62       | -8.53              |
+| 1996 | 9     | 26381.40 | 79728.58           | 896.12         | 3.52               |
+| ... | ...     | ... | ...        | ...          | ...               |
+| 1998 | 3     | 104854.16| 298491.56          | 5438.87        | 5.47               |
+| 1998 | 4     | 123798.68| 422290.24          | 18944.52       | 18.07              |
+| 1998 | 5     | 18333.63 | 440623.87          | -105465.05     | -85.19             |
 
 
 
-#### 3. What is the total amount each customer has paid so far?
+### Customers Analysis
+
+#### From which customers do we have the main operational revenue?
 
 ```sql
 SELECT
-    c.company_name,
-    SUM((od.unit_price * od.quantity) * (1 - od.discount)) AS total_revenue
-FROM order_details AS od
-LEFT JOIN orders AS o ON od.order_id = o.order_id
-LEFT JOIN customers AS c ON c.customer_id = o.customer_id
-GROUP BY 1
-ORDER BY total_revenue DESC;
+	c.company_name,
+	ROUND(SUM((od.unit_price * od.quantity) * (1 - od.discount))::numeric, 2) AS total_revenue,
+	ROUND((SUM((od.unit_price * od.quantity) * (1 - od.discount)) / SUM(SUM((od.unit_price * od.quantity) * (1 - od.discount))) OVER() * 100)::numeric, 2) AS percentage_of_total_revenue
+FROM 
+	order_details AS od
+LEFT JOIN 
+	orders AS o 
+	ON od.order_id = o.order_id
+LEFT JOIN 
+	customers AS c 
+	ON c.customer_id = o.customer_id
+GROUP BY 
+	c.company_name
+ORDER BY 
+	total_revenue DESC
 ```
 
-| Customer                             | Total Payment Value    |
-|--------------------------------------|-------------------------|
-| QUICK-Stop                           | 110277.30503039382      |
-| Ernst Handel                         | 104874.97814367746      |
-| Save-a-lot Markets                   | 104361.94954039395      |
-| Rattlesnake Canyon Grocery           | 51097.80082826822       |
-| ... | ... |
+| Customer Name                   | Total Revenue | Percentage |
+|--------------------------------|---------------|------------|
+| QUICK-Stop                      | 110277.31     | 8.71       |
+| Ernst Handel                   | 104874.98     | 8.29       |
+| Save-a-lot Markets              | 104361.95     | 8.24       |
+| Rattlesnake Canyon Grocery      | 51097.80      | 4.04       |
+| ...                              | ...           | ...        |
+| Lazy K Kountry Store            | 357.00        | 0.03       |
+| Centro comercial Moctezuma      | 100.80        | 0.01       |
 
-#### 4. Separate the customers into 5 groups according to the payment value per customer.
+
+#### How can we classify customers to give specific approaches based on their level of demand?
 
 ```sql
 SELECT
-    c.company_name,
-    SUM((od.unit_price * od.quantity) * (1 - od.discount)) AS total_revenue,
-    NTILE(5) OVER (ORDER BY SUM((od.unit_price * od.quantity) * (1 - od.discount)) DESC) AS revenue_group
-FROM order_details AS od
-LEFT JOIN orders AS o ON od.order_id = o.order_id
-LEFT JOIN customers AS c ON c.customer_id = o.customer_id
-GROUP BY 1
-ORDER BY total_revenue DESC;
+	c.company_name,
+	ROUND(SUM((od.unit_price * od.quantity) * (1 - od.discount))::numeric, 2) AS total_revenue,
+	ROUND((SUM((od.unit_price * od.quantity) * (1 - od.discount)) / SUM(SUM((od.unit_price * od.quantity) * (1 - od.discount))) OVER() * 100)::numeric, 2) AS percentage_of_total_revenue,
+	NTILE(5) OVER (ORDER BY SUM((od.unit_price * od.quantity) * (1 - od.discount)) DESC) AS revenue_group
+FROM 
+	order_details AS od
+LEFT JOIN 
+	orders AS o 
+	ON od.order_id = o.order_id
+LEFT JOIN 
+	customers AS c 
+	ON c.customer_id = o.customer_id
+GROUP BY 
+	c.company_name
+ORDER BY 
+	total_revenue DESC
 ```
 
-| Customer                           | Total Payment Value | Group |
-|------------------------------------|---------------------|-------|
-| QUICK-Stop                         | 110277.30503039382 | 1     |
-| Ernst Handel                       | 104874.97814367746 | 1     |
-| ...       | ...  | ...  |
-| Lazy K Kountry Store               | 356.99999809265137 | 5     |
-| Centro comercial Moctezuma         | 100.79999923706055 | 5     |
+| Company Name                  | Total Revenue | Percentage of Total Revenue | Revenue Group |
+|-------------------------------|---------------|-----------------------------|---------------|
+| QUICK-Stop                    | 110277.31     | 8.71                        | 1             |
+| Ernst Handel                 | 104874.98     | 8.29                        | 1             |
+| ...                           | ...           | ...                         | ...           |
+| Lazy K Kountry Store         | 357.00        | 0.03                        | 5             |
+| Centro comercial Moctezuma   | 100.80        | 0.01                        | 5             |
 
-#### 5. Now only the customers who are in groups 3, 4, and 5 will be selected for a special marketing analysis with them.
+
+Now only the customers who are in groups 3, 4, and 5 will be selected for a special marketing analysis with them.
 
 ```sql
 WITH companies_revenue_groups AS (
 	SELECT
-            c.company_name,
-            SUM((od.unit_price * od.quantity) * (1 - od.discount)) AS total_revenue,
-            NTILE(5) OVER (ORDER BY SUM((od.unit_price * od.quantity) * (1 - od.discount)) DESC) AS revenue_group
-	FROM order_details AS od
-	LEFT JOIN orders AS o ON od.order_id = o.order_id
-	LEFT JOIN customers AS c ON c.customer_id = o.customer_id
-	GROUP BY 1
-	ORDER BY total_revenue DESC
+		c.company_name,
+		ROUND(SUM((od.unit_price * od.quantity) * (1 - od.discount))::numeric, 2) AS total_revenue,
+		ROUND((SUM((od.unit_price * od.quantity) * (1 - od.discount)) / SUM(SUM((od.unit_price * od.quantity) * (1 - od.discount))) OVER() * 100)::numeric, 2) AS percentage_of_total_revenue,
+		NTILE(5) OVER (ORDER BY SUM((od.unit_price * od.quantity) * (1 - od.discount)) DESC) AS revenue_group
+	FROM 
+		order_details AS od
+	LEFT JOIN 
+		orders AS o 
+		ON od.order_id = o.order_id
+	LEFT JOIN 
+		customers AS c 
+		ON c.customer_id = o.customer_id
+	GROUP BY 
+		c.company_name
+	ORDER BY 
+		total_revenue DESC
 )
-
 SELECT 
     *   
-FROM companies_revenue_groups
-WHERE revenue_group IN (3,4,5);
+FROM 
+	companies_revenue_groups
+WHERE 
+	revenue_group IN (3,4,5);
 ```
 
-| Cliente                              | Total Payment Value   | Group |
-|--------------------------------------|-----------------------|-------|
-| Split Rail Beer & Ale                | 11441.630072270782    | 3     |
-| Tortuga Restaurante                  | 10812.150033950806    | 3     |
-| ...                     | ...     | ...     |
-| Lazy K Kountry Store                 | 356.99999809265137    | 5     |
-| Centro comercial Moctezuma           | 100.79999923706055    | 5     |
+| Company Name                        | Total Revenue | Percentage of Total Revenue | Revenue Group |
+|------------------------------------|---------------|-----------------------------|---------------|
+| Split Rail Beer & Ale              | 11441.63      | 0.90                        | 3             |
+| Tortuga Restaurante                | 10812.15      | 0.85                        | 3             |
+| ...                                | ...           | ...                         | ...           |
+| Lazy K Kountry Store               | 357.00        | 0.03                        | 5             |
+| Centro comercial Moctezuma         | 100.80        | 0.01                        | 5             |
 
-#### 6. Identify the top 10 best-selling products.
+
+
+Filter for only UK customers who paid more than 1000 dollars.
+
+```sql
+
+```
+
+### Products Analysis
+
+#### Which products have the highest demand and revenue?
 
 ```sql
 SELECT 
@@ -201,11 +243,6 @@ ORDER BY sales DESC;
 | Carnarvon Tigers                 | 29171.874963399023 |
 | Rössle Sauerkraut                | 25696.63978933155  |
 
-#### 7. Filter for only UK customers who paid more than 1000 dollars.
-
-```sql
-
-```
 
 ## Context
 
