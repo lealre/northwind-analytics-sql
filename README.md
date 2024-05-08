@@ -273,6 +273,23 @@ ORDER BY
 | Chocolade                         | 1368.71   | 138           |
 
 
-## Context
+## Database context
+
+The Northwind database contains sales data for a company called Northwind Traders, which imports and exports specialty foods from around the world.
+
+The Northwind database is an ERP with data on customers, orders, inventory, purchases, suppliers, shipments, employees, and accounting.
+
+The Northwind dataset includes sample data for the following:
+
+* **Suppliers**: Northwind's suppliers and vendors
+* **Customers**: Customers who purchase products from Northwind
+* **Employees**: Details of Northwind Traders' employees
+* **Products**: Product information
+* **Shippers**: Details of carriers that ship the traders' products to end customers
+* **Orders** and **Order Details**: Sales order transactions occurring between customers and the company
+
+The Northwind database includes 14 tables, and the relationships between the tables are shown in the following entity relationship diagram.
+
+![](pics/northwind-er-diagram.png)
 
 ## How to run this project
