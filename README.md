@@ -48,7 +48,7 @@ FROM annual_revenues;
 
 ```
 
-| Year | Total Revenue | Cumulative Total Revenue |
+| year | revenue | cumulative_revenue |
 |------|---------------|--------------------------|
 | 1996 | 208083.97     | 208083.97                |
 | 1997 | 617085.20     | 825169.17                |
@@ -93,7 +93,7 @@ ORDER BY
     year, month;
 ```
 
-| Year | Month | Revenue | Cumulative Revenue | Monthly Change | Monthly Change (%) |
+| year | month | monthly_revenue | ytd_revenue | monthly_difference | percentage_monthly_difference |
 |------|-------|---------|--------------------|----------------|--------------------|
 | 1996 | 7     | 27861.90 | 27861.90           |                |                    |
 | 1996 | 8     | 25485.28 | 53347.18           | -2376.62       | -8.53              |
@@ -128,7 +128,7 @@ ORDER BY
 	total_revenue DESC
 ```
 
-| Customer Name                   | Total Revenue | Percentage |
+| company_name                       | total_revenue | percentage_of_total_revenue |
 |--------------------------------|---------------|------------|
 | QUICK-Stop                      | 110277.31     | 8.71       |
 | Ernst Handel                   | 104874.98     | 8.29       |
@@ -143,25 +143,25 @@ ORDER BY
 
 ```sql
 SELECT
-	c.company_name,
-	ROUND(SUM((od.unit_price * od.quantity) * (1 - od.discount))::numeric, 2) AS total_revenue,
-	ROUND((SUM((od.unit_price * od.quantity) * (1 - od.discount)) / SUM(SUM((od.unit_price * od.quantity) * (1 - od.discount))) OVER() * 100)::numeric, 2) AS percentage_of_total_revenue,
-	NTILE(5) OVER (ORDER BY SUM((od.unit_price * od.quantity) * (1 - od.discount)) DESC) AS revenue_group
+    c.company_name,
+    ROUND(SUM((od.unit_price * od.quantity) * (1 - od.discount))::numeric, 2) AS total_revenue,
+    ROUND((SUM((od.unit_price * od.quantity) * (1 - od.discount)) / SUM(SUM((od.unit_price * od.quantity) * (1 - od.discount))) OVER() * 100)::numeric, 2) AS percentage_of_total_revenue,
+    NTILE(5) OVER (ORDER BY SUM((od.unit_price * od.quantity) * (1 - od.discount)) DESC) AS revenue_group
 FROM 
-	order_details AS od
+    order_details AS od
 LEFT JOIN 
-	orders AS o 
-	ON od.order_id = o.order_id
+    orders AS o 
+    ON od.order_id = o.order_id
 LEFT JOIN 
-	customers AS c 
-	ON c.customer_id = o.customer_id
+    customers AS c 
+    ON c.customer_id = o.customer_id
 GROUP BY 
-	c.company_name
+    c.company_name
 ORDER BY 
-	total_revenue DESC
+    total_revenue DESC
 ```
 
-| Company Name                  | Total Revenue | Percentage of Total Revenue | Revenue Group |
+| company_name                       | total_revenue | percentage_of_total_revenue | revenue_group |
 |-------------------------------|---------------|-----------------------------|---------------|
 | QUICK-Stop                    | 110277.31     | 8.71                        | 1             |
 | Ernst Handel                 | 104874.98     | 8.29                        | 1             |
@@ -174,33 +174,33 @@ Now only the customers who are in groups 3, 4, and 5 will be selected for a spec
 
 ```sql
 WITH companies_revenue_groups AS (
-	SELECT
-		c.company_name,
-		ROUND(SUM((od.unit_price * od.quantity) * (1 - od.discount))::numeric, 2) AS total_revenue,
-		ROUND((SUM((od.unit_price * od.quantity) * (1 - od.discount)) / SUM(SUM((od.unit_price * od.quantity) * (1 - od.discount))) OVER() * 100)::numeric, 2) AS percentage_of_total_revenue,
-		NTILE(5) OVER (ORDER BY SUM((od.unit_price * od.quantity) * (1 - od.discount)) DESC) AS revenue_group
-	FROM 
-		order_details AS od
-	LEFT JOIN 
-		orders AS o 
-		ON od.order_id = o.order_id
-	LEFT JOIN 
-		customers AS c 
-		ON c.customer_id = o.customer_id
-	GROUP BY 
-		c.company_name
-	ORDER BY 
-		total_revenue DESC
+    SELECT
+        c.company_name,
+        ROUND(SUM((od.unit_price * od.quantity) * (1 - od.discount))::numeric, 2) AS total_revenue,
+        ROUND((SUM((od.unit_price * od.quantity) * (1 - od.discount)) / SUM(SUM((od.unit_price * od.quantity) * (1 - od.discount))) OVER() * 100)::numeric, 2) AS percentage_of_total_revenue,
+        NTILE(5) OVER (ORDER BY SUM((od.unit_price * od.quantity) * (1 - od.discount)) DESC) AS revenue_group
+    FROM 
+        order_details AS od
+    LEFT JOIN 
+        orders AS o 
+        ON od.order_id = o.order_id
+    LEFT JOIN 
+        customers AS c 
+        ON c.customer_id = o.customer_id
+    GROUP BY 
+        c.company_name
+    ORDER BY 
+        total_revenue DESC
 )
 SELECT 
     *   
 FROM 
-	companies_revenue_groups
+    companies_revenue_groups
 WHERE 
-	revenue_group IN (3,4,5);
+    revenue_group IN (3,4,5);
 ```
 
-| Company Name                        | Total Revenue | Percentage of Total Revenue | Revenue Group |
+| company_name                       | total_revenue | percentage_of_total_revenue | revenue_group |
 |------------------------------------|---------------|-----------------------------|---------------|
 | Split Rail Beer & Ale              | 11441.63      | 0.90                        | 3             |
 | Tortuga Restaurante                | 10812.15      | 0.85                        | 3             |
@@ -213,8 +213,36 @@ WHERE
 Filter for only UK customers who paid more than 1000 dollars.
 
 ```sql
-
+SELECT 
+    c.company_name, 
+    ROUND(SUM(od.unit_price * od.quantity * (1.0 - od.discount))::numeric, 2) AS revenue
+FROM 
+    order_details AS od
+LEFT JOIN 
+    orders AS o 
+    ON od.order_id = o.order_id
+LEFT JOIN 
+    customers AS c
+    ON o.customer_id = c.customer_id
+WHERE 
+    LOWER(c.country) = 'uk'
+GROUP BY 
+    c.company_name
+HAVING 
+    SUM(od.unit_price * od.quantity * (1.0 - od.discount)) > 1000
+ORDER BY
+    revenue DESC;
 ```
+
+| company_name           | revenue |
+|-------------------------|---------------|
+| Seven Seas Imports      | 16215.33      |
+| Eastern Connection      | 14761.03      |
+| Around the Horn         | 13390.65      |
+| Island Trading          | 6146.30       |
+| B's Beverages           | 6089.90       |
+| Consolidated Holdings   | 1719.10       |
+
 
 ### Products Analysis
 
@@ -222,26 +250,27 @@ Filter for only UK customers who paid more than 1000 dollars.
 
 ```sql
 SELECT 
-    products.product_name, 
-    SUM(order_details.unit_price * order_details.quantity * (1.0 - order_details.discount)) AS sales
-FROM products
-INNER JOIN order_details ON order_details.product_id = products.product_id
-GROUP BY products.product_name
-ORDER BY sales DESC;
+    DISTINCT p.product_name, 
+    ROUND((SUM(od.unit_price * od.quantity * (1.0 - od.discount)) OVER (PARTITION BY p.product_name))::numeric, 2) AS revenue,
+    SUM(od.quantity) OVER (PARTITION BY p.product_name) AS quantity_sold
+FROM 
+    order_details AS od
+LEFT JOIN 
+    products AS p
+    ON od.product_id = p.product_id
+ORDER BY 
+    revenue DESC;
 ```
 
-| Product                           | Total Sales         |
-|----------------------------------|---------------------|
-| Côte de Blaye                    | 141396.7356273254  |
-| Thüringer Rostbratwurst          | 80368.6724385033   |
-| Raclette Courdavault             | 71155.69990943     |
-| Tarte au sucre                   | 47234.969978504174 |
-| Camembert Pierrot                | 46825.48029542655  |
-| Gnocchi di nonna Alice           | 42593.0598222503   |
-| Manjimup Dried Apples            | 41819.65024582073  |
-| Alice Mutton                     | 32698.380216373203 |
-| Carnarvon Tigers                 | 29171.874963399023 |
-| Rössle Sauerkraut                | 25696.63978933155  |
+| product_name                       | revenue   | quantity_sold |
+|------------------------------------|-----------|---------------|
+| Côte de Blaye                     | 141396.74 | 623           |
+| Thüringer Rostbratwurst           | 80368.67  | 746           |
+| Raclette Courdavault              | 71155.70  | 1496          |
+|...|...|...|
+| Genen Shouyu                      | 1784.82   | 122           |
+| Geitost                           | 1648.12   | 755           |
+| Chocolade                         | 1368.71   | 138           |
 
 
 ## Context
