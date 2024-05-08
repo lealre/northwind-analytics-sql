@@ -17,7 +17,7 @@ The analyses provided here can benefit companies of all sizes looking to enhance
     - [Products Analysis](#products-analysis)
         - [Which products have the highest demand and revenue?](#which-products-have-the-highest-demand-and-revenue)
 
-- [Context](#context)
+- [Database context](#database-context)
 - [How to run this project](#how-to-run-this-project)
 
 -------------------------------
@@ -28,6 +28,7 @@ The analyses provided here can benefit companies of all sizes looking to enhance
 
 #### How can we observe the operational revenue over the years?
 ```sql
+CREATE VIEW annual_revenues_analysis AS
 WITH annual_revenues AS (
     SELECT 
         EXTRACT(YEAR FROM o.order_date) AS year,
@@ -45,7 +46,6 @@ SELECT
     revenue,
     SUM(revenue) OVER (ORDER BY year) AS cumulative_revenue
 FROM annual_revenues;
-
 ```
 
 | year | revenue | cumulative_revenue |
@@ -57,6 +57,7 @@ FROM annual_revenues;
 #### How can we observe the trends of the operational revenue within each year?
 
 ```sql
+CREATE VIEW ytd_revenue_analysis AS
 WITH monthly_revenue_table AS (
     SELECT
         EXTRACT(YEAR FROM o.order_date) AS year,
@@ -110,22 +111,23 @@ ORDER BY
 #### From which customers do we have the main operational revenue?
 
 ```sql
+CREATE VIEW customers_analysis AS
 SELECT
-	c.company_name,
-	ROUND(SUM((od.unit_price * od.quantity) * (1 - od.discount))::numeric, 2) AS total_revenue,
-	ROUND((SUM((od.unit_price * od.quantity) * (1 - od.discount)) / SUM(SUM((od.unit_price * od.quantity) * (1 - od.discount))) OVER() * 100)::numeric, 2) AS percentage_of_total_revenue
+    c.company_name,
+    ROUND(SUM((od.unit_price * od.quantity) * (1 - od.discount))::numeric, 2) AS total_revenue,
+    ROUND((SUM((od.unit_price * od.quantity) * (1 - od.discount)) / SUM(SUM((od.unit_price * od.quantity) * (1 - od.discount))) OVER() * 100)::numeric, 2) AS percentage_of_total_revenue
 FROM 
-	order_details AS od
+    order_details AS od
 LEFT JOIN 
-	orders AS o 
-	ON od.order_id = o.order_id
+    orders AS o 
+    ON od.order_id = o.order_id
 LEFT JOIN 
-	customers AS c 
-	ON c.customer_id = o.customer_id
+    customers AS c 
+    ON c.customer_id = o.customer_id
 GROUP BY 
-	c.company_name
+    c.company_name
 ORDER BY 
-	total_revenue DESC
+    total_revenue DESC
 ```
 
 | company_name                       | total_revenue | percentage_of_total_revenue |
@@ -142,6 +144,7 @@ ORDER BY
 #### How can we classify customers to give specific approaches based on their level of demand?
 
 ```sql
+CREATE VIEW revenue_groups AS 
 SELECT
     c.company_name,
     ROUND(SUM((od.unit_price * od.quantity) * (1 - od.discount))::numeric, 2) AS total_revenue,
@@ -173,6 +176,7 @@ ORDER BY
 Now only the customers who are in groups 3, 4, and 5 will be selected for a special marketing analysis with them.
 
 ```sql
+CREATE VIEW revenue_groups_filtered AS
 WITH companies_revenue_groups AS (
     SELECT
         c.company_name,
@@ -213,6 +217,7 @@ WHERE
 Filter for only UK customers who paid more than 1000 dollars.
 
 ```sql
+CREATE VIEW uk_customers_who_payed_more_than_1000 AS 
 SELECT 
     c.company_name, 
     ROUND(SUM(od.unit_price * od.quantity * (1.0 - od.discount))::numeric, 2) AS revenue
@@ -249,6 +254,7 @@ ORDER BY
 #### Which products have the highest demand and revenue?
 
 ```sql
+CREATE VIEW products_analysis AS
 SELECT 
     DISTINCT p.product_name, 
     ROUND((SUM(od.unit_price * od.quantity * (1.0 - od.discount)) OVER (PARTITION BY p.product_name))::numeric, 2) AS revenue,
