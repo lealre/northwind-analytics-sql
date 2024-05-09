@@ -6,6 +6,8 @@ The Northwind database contains sales data from a company called Northwind Trade
 
 The analyses provided here can benefit companies of all sizes looking to enhance their analytical capabilities. Through these reports, organizations can strategically position themselves in the market, leveraging data-driven decisions to improve their future results.
 
+It is possible to run this project using only Docker, as it builds both the PostgreSQL database and the client (PGAdmin). All instructions are provided in [How to run this project](#how-to-run-this-project) section.
+
 ## Table of Contents
 - [Questions we want to answer](#questions-we-want-to-answer)
     - [Operational Revenue](#operational-revenue)
@@ -313,43 +315,41 @@ Its is required to have docker and docker compose intalled to be able to run thi
 
 Once we have docker avaiable, we do the following steps to run this project locally.
 
-1. Clone the repository locally
+1. Clone the repository locally.
 ```bash 
 git clone https://github.com/lealre/northwind-analytics-sql.git
 ```
 
-2. Access the project folder
+2. Access the project folder.
 ```bash
 cd northwind-analytics-sql
 ```
 
-3. Build the Docker container
+3. Build the Docker container.
 ```bash
 docker compose up -d
 ```
 
-The `-d` flag is to run the container deattached from the terminal.
+The `-d` flag is used to run the container detached from the terminal.
 
-4. Access Pgadmin
-http://localhost:5050/
+4. Access pgAdmin at http://localhost:5050/
 
-5. Set the master password (When accessing the first time):
+5. Set the master password (when accessing for the first time).
 
 ![](pics/1.png)
 
-6. Rigth click in server e connect pgadmin to the databse, using the db credentials
+6. Right-click on the server to connect pgAdmin to the database.
 
 ![](pics/2.png)
 
-7. Set the db name (Can be anyone you want).
-
-![](pics/2.png)
-
-8. Connect with the database using the credentials we set in docker-compose.yaml 
-
-Host name: `db`
-
-Password: `postgres`
+7. Set the server name (it can be any name you want).
 
 ![](pics/3.png)
+
+8. Connect to the database using the credentials we set in the [`docker-compose.yaml`](docker-compose.yaml) file.
+
+`Host name`: `db`
+
+`Password`: `postgres`
+
 ![](pics/4.png)
