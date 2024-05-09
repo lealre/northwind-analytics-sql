@@ -3988,7 +3988,7 @@ LEFT JOIN
 GROUP BY 
     c.company_name
 ORDER BY 
-    total_revenue DESC
+    total_revenue DESC;
 
 -- How can we classify customers to give specific approaches based on their level of demand?
 CREATE VIEW revenue_groups AS 
@@ -4008,7 +4008,7 @@ LEFT JOIN
 GROUP BY 
     c.company_name
 ORDER BY 
-    total_revenue DESC
+    total_revenue DESC;
 
 -- revenue groups filtered
 CREATE VIEW revenue_groups_filtered AS
