@@ -299,3 +299,32 @@ The Northwind database includes 14 tables, and the relationships between the tab
 ![](pics/northwind-er-diagram.png)
 
 ## How to run this project
+
+### Manually
+
+After connecting to your own database, use the [`northwind.sql`](northwind.sql) file to populate the database by copying the script, pasting it into the query tool, and running it.
+
+### With Docker
+
+Its is required to have docker and docker compose intalled to be able to run this project.
+
+- [Start with Docker](https://www.docker.com/get-started/)
+- [Install Docker Compose](https://docs.docker.com/compose/install/)
+
+
+
+
+Build the container
+```bash
+docker compose up -d
+```
+
+Enter the link
+http://localhost:5050/
+
+Set the master password if it ask
+
+* Rigth click in server e connect pgadmin to the databse, using the db credentials
+    * Set the db name (Can be anyone you want)
+    * Set the host name (Can be anyone you want)
+    * Set 
