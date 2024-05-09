@@ -6,7 +6,7 @@ The Northwind database contains sales data from a company called Northwind Trade
 
 The analyses provided here can benefit companies of all sizes looking to enhance their analytical capabilities. Through these reports, organizations can strategically position themselves in the market, leveraging data-driven decisions to improve their future results.
 
-It is possible to run this project using only Docker, as it builds both the PostgreSQL database and the client (PGAdmin). All instructions are provided in [How to run this project](#how-to-run-this-project) section.
+It is possible to run this project using only Docker, as it builds both the PostgreSQL database and the client pgAdmin. All instructions are provided in [How to run this project](#how-to-run-this-project) section.
 
 ## Table of Contents
 - [Questions we want to answer](#questions-we-want-to-answer)
@@ -313,7 +313,7 @@ Its is required to have docker and docker compose intalled to be able to run thi
 - [Start with Docker](https://www.docker.com/get-started/)
 - [Install Docker Compose](https://docs.docker.com/compose/install/)
 
-Once we have docker avaiable, we do the following steps to run this project locally.
+Once we have docker avaiable, we do the following steps:
 
 1. Clone the repository locally.
 ```bash 
@@ -336,15 +336,16 @@ The `-d` flag is used to run the container detached from the terminal.
 
 5. Set the master password (when accessing for the first time).
 
-![](pics/1.png)
+<img src="pics/1.png"  width=500>
 
 6. Right-click on the server to connect pgAdmin to the database.
 
-![](pics/2.png)
+<img src="pics/2.png"  width=500>
+
 
 7. Set the server name (it can be any name you want).
 
-![](pics/3.png)
+<img src="pics/3.png"  width=500>
 
 8. Connect to the database using the credentials we set in the [`docker-compose.yaml`](docker-compose.yaml) file.
 
@@ -352,4 +353,5 @@ The `-d` flag is used to run the container detached from the terminal.
 
 `Password`: `postgres`
 
-![](pics/4.png)
+<img src="pics/4.png"  width=500>
+
