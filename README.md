@@ -311,20 +311,45 @@ Its is required to have docker and docker compose intalled to be able to run thi
 - [Start with Docker](https://www.docker.com/get-started/)
 - [Install Docker Compose](https://docs.docker.com/compose/install/)
 
+Once we have docker avaiable, we do the following steps to run this project locally.
 
+1. Clone the repository locally
+```bash 
+git clone https://github.com/lealre/northwind-analytics-sql.git
+```
 
+2. Access the project folder
+```bash
+cd northwind-analytics-sql
+```
 
-Build the container
+3. Build the Docker container
 ```bash
 docker compose up -d
 ```
 
-Enter the link
+The `-d` flag is to run the container deattached from the terminal.
+
+4. Access Pgadmin
 http://localhost:5050/
 
-Set the master password if it ask
+5. Set the master password (When accessing the first time):
 
-* Rigth click in server e connect pgadmin to the databse, using the db credentials
-    * Set the db name (Can be anyone you want)
-    * Set the host name (Can be anyone you want)
-    * Set 
+![](pics/1.png)
+
+6. Rigth click in server e connect pgadmin to the databse, using the db credentials
+
+![](pics/2.png)
+
+7. Set the db name (Can be anyone you want).
+
+![](pics/2.png)
+
+8. Connect with the database using the credentials we set in docker-compose.yaml 
+
+Host name: `db`
+
+Password: `postgres`
+
+![](pics/3.png)
+![](pics/4.png)
