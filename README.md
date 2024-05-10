@@ -29,6 +29,9 @@ It is possible to run this project using only Docker, as it builds both the Post
 ### Operational Revenue
 
 #### How can we observe the operational revenue over the years?
+
+The query below aggregates the operational revenue by year and calculates the cumulative operational revenue over the same years. It is useful for obtaining an overall trend of the results.
+
 ```sql
 CREATE VIEW annual_revenues_analysis AS
 WITH annual_revenues AS (
@@ -57,6 +60,8 @@ FROM annual_revenues;
 | 1998 | 440623.87     | 1265793.04               |
 
 #### How can we observe the trends of the operational revenue within each year?
+
+By using a similar approach to the previous query, we can aggregate the operational revenue by month, calculate the cumulative operational revenue by year (year-to-date), and obtain the total and relative difference between each month. This can be useful for observing trends in small time windows and identifying patterns specific to the business, such as certain parts of the year yielding better results than others.
 
 ```sql
 CREATE VIEW ytd_revenue_analysis AS
@@ -112,6 +117,8 @@ ORDER BY
 
 #### From which customers do we have the main operational revenue?
 
+The query below orders the customers by the total and relative operational revenue they were responsible for over the total time. This is very useful for understanding the concentration of operational revenue and forecasting future results. 
+
 ```sql
 CREATE VIEW customers_analysis AS
 SELECT
@@ -145,6 +152,8 @@ ORDER BY
 
 #### How can we classify customers to give specific approaches based on their level of demand?
 
+After classifying customers based on operational revenue, we can categorize them by executing the following query.
+
 ```sql
 CREATE VIEW revenue_groups AS 
 SELECT
@@ -175,7 +184,7 @@ ORDER BY
 | Centro comercial Moctezuma   | 100.80        | 0.01                        | 5             |
 
 
-Now only the customers who are in groups 3, 4, and 5 will be selected for a special marketing analysis with them.
+Now only the customers who are in groups 3, 4, and 5 will be selected for a special marketing analysis with them, for example.
 
 ```sql
 CREATE VIEW revenue_groups_filtered AS
@@ -215,8 +224,7 @@ WHERE
 | Centro comercial Moctezuma         | 100.80        | 0.01                        | 5             |
 
 
-
-Filter for only UK customers who paid more than 1000 dollars.
+We can also filter customers by specific criteria, like filtering for only UK customers who paid more than 1000 dollars, for example.
 
 ```sql
 CREATE VIEW uk_customers_who_payed_more_than_1000 AS 
@@ -254,6 +262,8 @@ ORDER BY
 ### Products Analysis
 
 #### Which products have the highest demand and revenue?
+
+The query below orders the products responsible for generating more operational revenue, as well as their total quantity sold.
 
 ```sql
 CREATE VIEW products_analysis AS
