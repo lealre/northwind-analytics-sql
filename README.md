@@ -369,3 +369,5 @@ The `-d` flag is used to run the container detached from the terminal.
 
 <img src="pics/4.png"  width=500>
 
+After completing this final step, you will be able to access the Northwind database, as well as the views created in the report.
+
