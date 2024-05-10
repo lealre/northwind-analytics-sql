@@ -18,6 +18,7 @@ It is possible to run this project using only Docker, as it builds both the Post
         - [How can we classify customers to give specific approaches based on their level of demand?](#how-can-we-classify-customers-to-give-specific-approaches-based-on-their-level-of-demand)
     - [Products Analysis](#products-analysis)
         - [Which products have the highest demand and revenue?](#which-products-have-the-highest-demand-and-revenue)
+    - [Conclusion](#conlusion)
 
 - [Database context](#database-context)
 - [How to run this project](#how-to-run-this-project)
@@ -290,6 +291,9 @@ ORDER BY
 | Geitost                           | 1648.12   | 755           |
 | Chocolade                         | 1368.71   | 138           |
 
+### Conlusion
+
+In this report, we performed some queries to obtain specific business insights to assist the business. There are always more filters and approaches we can explore, as well as extending the monthly analysis conducted on operational revenue to include customers and products.
 
 ## Database context
 
